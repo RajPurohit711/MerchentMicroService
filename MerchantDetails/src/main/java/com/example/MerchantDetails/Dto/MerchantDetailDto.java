@@ -1,30 +1,41 @@
 package com.example.MerchantDetails.Dto;
 
+import java.time.LocalDate;
+
 public class MerchantDetailDto {
 
     private Long id;
-    private String emailId;
-    private Long phoneNumber;
+    private String email;
+    private Long phoneNo;
     private String name;
     private String address;
-    private Long sellerSince;
+    private LocalDate sellerSince;
     private String description;
-    private String profileImg;
+    private String profileImage;
+    private int rating;
 
-    public String getEmailId() {
-        return emailId;
+    public Long getId() {
+        return id;
     }
 
-    public void setEmailId(String emailId) {
-        this.emailId = emailId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public Long getPhoneNumber() {
-        return phoneNumber;
+    public String getEmail() {
+        return email;
     }
 
-    public void setPhoneNumber(Long phoneNumber) {
-        this.phoneNumber = phoneNumber;
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public Long getPhoneNo() {
+        return phoneNo;
+    }
+
+    public void setPhoneNo(Long phoneNo) {
+        this.phoneNo = phoneNo;
     }
 
     public String getName() {
@@ -43,11 +54,11 @@ public class MerchantDetailDto {
         this.address = address;
     }
 
-    public Long getSellerSince() {
+    public LocalDate getSellerSince() {
         return sellerSince;
     }
 
-    public void setSellerSince(Long sellerSince) {
+    public void setSellerSince(LocalDate sellerSince) {
         this.sellerSince = sellerSince;
     }
 
@@ -59,18 +70,19 @@ public class MerchantDetailDto {
         this.description = description;
     }
 
-    public String getProfileImg() {
-        return profileImg;
+    public String getProfileImage() {
+        return profileImage;
     }
 
-    public void setProfileImg(String profileImg) {
-        this.profileImg = profileImg;
-    }
-    public Long getId() {
-        return id;
+    public void setProfileImage(String profileImage) {
+        this.profileImage = profileImage;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public int getRating() {
+        return rating;
+    }
+
+    public void setRating(int rating) {
+        this.rating = rating;
     }
 }

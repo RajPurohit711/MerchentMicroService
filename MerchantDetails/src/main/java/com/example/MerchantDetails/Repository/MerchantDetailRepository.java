@@ -6,5 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MerchantDetailRepository extends CrudRepository<MerchantDetail,Long> {
-    void deleteByEmailId(String id);
+    void deleteByEmail(String email);
+    MerchantDetail findByEmail(String email);
 }

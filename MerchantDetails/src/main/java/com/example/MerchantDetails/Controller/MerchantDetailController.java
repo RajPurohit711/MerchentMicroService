@@ -1,58 +1,101 @@
 package com.example.MerchantDetails.Controller;
 
+import com.example.MerchantDetails.Dto.LoginDto;
 import com.example.MerchantDetails.Dto.MerchantDetailDto;
-import com.example.MerchantDetails.Dto.MerchantRegisterDto;
+import com.example.MerchantDetails.Dto.OtpDto;
+import com.example.MerchantDetails.Dto.ValidateOtpDto;
 import com.example.MerchantDetails.Entity.MerchantDetail;
-import com.example.MerchantDetails.Entity.MerchantLogin;
 import com.example.MerchantDetails.Service.MerchantDetailService;
-import com.example.MerchantDetails.Service.MerchantLoginService;
+import net.minidev.json.JSONObject;
+import org.mindrot.jbcrypt.BCrypt;
+import org.springframework.amqp.core.DirectExchange;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Random;
+
 @RestController
-@RequestMapping(value = "/Detail")
+@RequestMapping(value = "/merchant")
 public class MerchantDetailController {
     @Autowired
     MerchantDetailService merchantDetailService;
 
     @Autowired
-    MerchantLoginService merchantLoginService;
+    private RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    private DirectExchange exchange;
+
+    OtpDto otpDto=new OtpDto();
+
 
     @GetMapping(value = "/{id}")
-    MerchantDetailDto select(@PathVariable("id") Long id)
+    MerchantDetailDto getMerchantById(@PathVariable("id") Long id)
     {
         MerchantDetail merchantDetail = merchantDetailService.select(id);
-        MerchantDetailDto organisationDto = new MerchantDetailDto();
-        BeanUtils.copyProperties(merchantDetail,organisationDto);
-        return organisationDto;
+        MerchantDetailDto merchantDetailDto = new MerchantDetailDto();
+        BeanUtils.copyProperties(merchantDetail,merchantDetailDto);
+        return merchantDetailDto;
     }
 
-    @RequestMapping(value = "/save",method = {RequestMethod.PUT,RequestMethod.POST})
-    void save(@RequestBody MerchantRegisterDto merchantRegisterDto)
-    {
-        MerchantDetail merchantDetail = new MerchantDetail();
-        MerchantLogin merchantLogin = new MerchantLogin();
-        BeanUtils.copyProperties(merchantRegisterDto, merchantDetail);
-        BeanUtils.copyProperties(merchantRegisterDto,merchantLogin);
-        merchantDetailService.save(merchantDetail);
-        merchantLoginService.save(merchantLogin);
+
+
+    @RequestMapping(value={"/register"},method = {RequestMethod.POST,RequestMethod.PUT})
+    JSONObject registerMerchant(@RequestBody ValidateOtpDto validateOtpDto){
+        JSONObject jsonObject=new JSONObject();
+        if (validateOtpDto.getPassword().equals(validateOtpDto.getConfirmPassword())){
+            Random rnd = new Random();
+            Long number = Long.valueOf(new Random().nextInt(900000) + 100000);
+            otpDto.setOtp(number);
+            String email=validateOtpDto.getEmail();
+            otpDto.setEmail(email);
+            rabbitTemplate.convertAndSend(exchange.getName(),"routing.MerchantEmail",otpDto);
+            String enOtp=BCrypt.hashpw(number.toString(),BCrypt.gensalt());
+            jsonObject.put("status",201);
+            jsonObject.put("enOtp",enOtp);
+            return jsonObject;
+        }
+        jsonObject.put("status",500);
+        return jsonObject;
     }
 
-    @GetMapping(value = "/count")
-    int countOfMerchants()
-    {
-        Iterable<MerchantDetail> organisations = merchantDetailService.findAll();
-        int sum = 0;
-        for(MerchantDetail org:organisations)sum++;
-        return sum;
+    @RequestMapping(value={"/verify"},method = {RequestMethod.POST,RequestMethod.PUT})
+    JSONObject verifyAndRegister(@RequestBody ValidateOtpDto validateOtpDto){
+
+        JSONObject jsonObject=new JSONObject();
+        if (BCrypt.checkpw(String.valueOf(validateOtpDto.getOtp()),validateOtpDto.getEnOtp())){
+            MerchantDetail merchantDetail =new MerchantDetail();
+            String password=validateOtpDto.getPassword();
+            String enPassword=BCrypt.hashpw(password,BCrypt.gensalt());
+            validateOtpDto.setPassword(enPassword);
+            BeanUtils.copyProperties(validateOtpDto,merchantDetail);
+            merchantDetail.setSellerSince(java.time.LocalDate.now());
+            merchantDetailService.save(merchantDetail);
+            jsonObject.put("status",201);
+            return jsonObject;
+        }
+        jsonObject.put("status",500);
+        return jsonObject;
+
     }
 
-    @GetMapping(value = "/all")
-    Iterable<MerchantDetail> findAll()
-    {
-        return merchantDetailService.findAll();
+    @RequestMapping(value={"/login"},method = {RequestMethod.POST,RequestMethod.PUT})
+    JSONObject authenticateMerchant(@RequestBody LoginDto loginDto) {
+        JSONObject jsonObject=new JSONObject();
+        if(merchantDetailService.exists(loginDto))
+        {
+            jsonObject.put("status",201);
+            return jsonObject;
+        }
+        jsonObject.put("status",500);
+        return jsonObject;
     }
+
+
+
+
 
     @DeleteMapping(value = "/{id}")
     void deleteById(@PathVariable Long id)
@@ -61,32 +104,21 @@ public class MerchantDetailController {
     }
 
     @GetMapping(value = "byEmail/{id}")
-    MerchantDetailDto findByEmailId(@PathVariable("id") String id)
+    MerchantDetailDto findMerchantByEmailId(@PathVariable("id") String id)
     {
-        Iterable<MerchantDetail> merchantDetails = merchantDetailService.findAll();
-        for(MerchantDetail merchantDetail:merchantDetails)
-        {
-            String mail = merchantDetail.getEmailId();
-            if(mail.equals(id))
-            {
-                return select(merchantDetail.getId());
-            }
-        }
-        return null;
+        MerchantDetailDto merchantDetailDto=new MerchantDetailDto();
+        MerchantDetail merchantDetail=merchantDetailService.getMerchantByEmail(id);
+        BeanUtils.copyProperties(merchantDetail,merchantDetailDto);
+        return  merchantDetailDto;
     }
 
-    @GetMapping(value = "byName/{id}")
-    MerchantDetailDto findByName(@PathVariable("id") String id)
+    @GetMapping(value = "/all")
+    Iterable<MerchantDetail> findAll()
     {
-        Iterable<MerchantDetail> merchantDetails = merchantDetailService.findAll();
-        for(MerchantDetail merchantDetail:merchantDetails)
-        {
-            String mail = merchantDetail.getName();
-            if(mail.equals(id))
-            {
-                return select(merchantDetail.getId());
-            }
-        }
-        return null;
+        return merchantDetailService.findAll();
     }
+
 }
+
+
+

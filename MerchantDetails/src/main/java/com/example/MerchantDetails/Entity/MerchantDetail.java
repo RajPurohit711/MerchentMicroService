@@ -4,27 +4,34 @@ import com.example.MerchantDetails.Dto.MerchantDetailDto;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 
 @Table
 @Entity
-public class MerchantDetail extends MerchantDetailDto {
+public class MerchantDetail {
     @Id
     @GeneratedValue(generator = "seq_gen_alias")
     @GenericGenerator(name="seq_gen_alias",strategy = "increment")
     private Long id;
-    @Column(unique = true,nullable = false)
-    private String emailId;
 
-    @Column(nullable = false,unique = true)
-    private Long phoneNumber;
-    @Column(nullable = false)
+    @Column(unique =true,nullable = false,length = 100)
+    private String email;
+    @Column(nullable = false,length = 200)
     private String name;
-    @Column(nullable = false)
+    @Column(length = 2048)
     private String address;
-
-    private Long sellerSince;
+    @Column(length=10)
+    private String rating;
+    @Column(length=15)
+    private LocalDate sellerSince;
+    @Column(unique =true,nullable = false,length=20)
+    private Long phoneNo;
+    @Column(length=2048)
     private String description;
-    private String profileImg;
+    @Column(length=2048)
+    private String profileImage;
+    @Column(nullable = false)
+    private String password;
 
     public Long getId() {
         return id;
@@ -34,20 +41,12 @@ public class MerchantDetail extends MerchantDetailDto {
         this.id = id;
     }
 
-    public String getEmailId() {
-        return emailId;
+    public String getEmail() {
+        return email;
     }
 
-    public void setEmailId(String emailId) {
-        this.emailId = emailId;
-    }
-
-    public Long getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(Long phoneNumber) {
-        this.phoneNumber = phoneNumber;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getName() {
@@ -66,12 +65,28 @@ public class MerchantDetail extends MerchantDetailDto {
         this.address = address;
     }
 
-    public Long getSellerSince() {
+    public String getRating() {
+        return rating;
+    }
+
+    public void setRating(String rating) {
+        this.rating = rating;
+    }
+
+    public LocalDate getSellerSince() {
         return sellerSince;
     }
 
-    public void setSellerSince(Long sellerSince) {
+    public void setSellerSince(LocalDate sellerSince) {
         this.sellerSince = sellerSince;
+    }
+
+    public Long getPhoneNo() {
+        return phoneNo;
+    }
+
+    public void setPhoneNo(Long phoneNo) {
+        this.phoneNo = phoneNo;
     }
 
     public String getDescription() {
@@ -82,12 +97,19 @@ public class MerchantDetail extends MerchantDetailDto {
         this.description = description;
     }
 
-    public String getProfileImg() {
-        return profileImg;
+    public String getProfileImage() {
+        return profileImage;
     }
 
-    public void setProfileImg(String profileImg) {
-        this.profileImg = profileImg;
+    public void setProfileImage(String profileImage) {
+        this.profileImage = profileImage;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }
