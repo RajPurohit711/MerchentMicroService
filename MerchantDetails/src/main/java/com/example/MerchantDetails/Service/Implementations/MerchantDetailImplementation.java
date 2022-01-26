@@ -37,7 +37,7 @@ public class MerchantDetailImplementation implements MerchantDetailService {
     @Override
     public boolean exists(LoginDto loginDto){
         MerchantDetail merchantDetail=merchantDetailRepository.findByEmail(loginDto.getEmail());
-        if (BCrypt.checkpw(String.valueOf(merchantDetail.getPassword()),loginDto.getPassword())){
+        if (BCrypt.checkpw(loginDto.getPassword(),merchantDetail.getPassword())){
             return true;
         }
         return false;
